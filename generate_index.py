@@ -1,7 +1,11 @@
 import requests
 
-ORG = "hanihatena35-prog"
-REPOS = ["project-docs1", "project-docs2", "project-docs3"]
+ORG = "hanihatena35-prog" # ユーザー名かOrgazination
+
+url = f"https//api.github.com/users/{ORG}/repos"  #Github API使用
+
+res = requests.get(url)
+repos = res.json()
 
 html = """<!DOCTYPE html>
 <html lang="ja">
@@ -14,15 +18,23 @@ html = """<!DOCTYPE html>
 <ul>
 """
 
-for repo in REPOS:
-    pages_ur1 = f"https://{ORG}.github.io/{repo}/"
-    html += f'<li><a href="{pages_ur1}">{repo}</a></li>\n'
+for repo in repos:
+    name = repo["name"]
 
-html += """
-</ul>
-</body>
-</html>
-"""
+    #　公開repoのみ対象
+    #　ひとまずPublicも対象にするので下記をコメント化
+    # if repo["private"]:
+    #     continue
+
+    #　表示対象を絞る（任意：prefix)
+    if not name.startswith("repo-"):
+        continue
+
+    pages_ur1 = f"https://{ORG}.github.io/{name}/"
+
+    html += f'<li><a href="{pages_ur1}" target="_balank">{name}</a></li>\n'
+
+html += "</ul></body></html>"
 
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
