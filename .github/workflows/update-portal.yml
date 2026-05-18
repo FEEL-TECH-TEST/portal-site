@@ -10,4 +10,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Generate index
+        run: python generate_index.py
+
       - run: echo "workflow ok"
