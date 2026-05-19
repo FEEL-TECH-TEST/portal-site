@@ -32,7 +32,7 @@ for repo in repos:
 
     pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
 
-    html += f'<li>{pages_ur1}</li>\n'
+    html += f'<li><a href="{pages_ur1}{name}"</a></li>\n'
 
 html += "</ul></body></html>"
 
