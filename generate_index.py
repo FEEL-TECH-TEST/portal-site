@@ -12,14 +12,64 @@ html = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <title>ダウンロードポータル</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    background-color: #f5f6f8;
+    margin: 0;
+    padding: 20px;
+}
+
+h1{
+    text-align: center;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.card h2 {
+    margin: 0;
+}
+
+.card p {
+    color: #666;
+    margin: 5px 0 10px 0;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 14px;
+    background: #0366d6;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+}
+
+.btn:hover {
+    background: #024c9a;
+}
+</style>
+
 </head>
 <body>
 <h1>ダウンロードポータル</h1>
-<ul>
+<div class="container">
 """
 
 for repo in repos:
     name = repo["name"]
+    description = repo["description"] or ""
 
     #　公開repoのみ対象
     #　ひとまずPublicも対象にするので下記をコメント化
@@ -32,9 +82,15 @@ for repo in repos:
 
     pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
 
-    html += f'<li><a href="{pages_ur1}" target="_blank">📂{name}</a></li>\n'
+    html += f"""
+    <div class="card">
+        <h2>📂{name}</h2>
+        <p>{description}</p>
+        <a href="{pages_ur1}" class="btn" target="_blank" rel="noopener">ダウンロードページへ</a>
+    </div>
+    """
 
-html += "</ul></body></html>"
+html += "</div></body></html>"
 
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html)
