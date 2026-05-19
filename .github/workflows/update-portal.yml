@@ -2,13 +2,16 @@ name: Update Portal Index
 
 on:
   workflow_dispatch:
+  
+  schedule:
+    - cron: "0 0 * * *"  # 1日毎
 
 jobs:
-  test:
+  update:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Generate index
         run: python generate_index.py
@@ -20,5 +23,3 @@ jobs:
           git add index.html
           git commit -m "Auto update portal index" || exit 0
           git push
-
-      - run: echo "workflow ok"
