@@ -2,7 +2,7 @@ import requests
 
 ORG = "hanihatena35-prog" # ユーザー名かOrgazination
 
-url = f"https//api.github.com/users/{ORG}/repos"  #Github API使用
+url = f"https://api.github.com/users/{ORG}/repos"  #Github API使用
 
 res = requests.get(url)
 repos = res.json()
@@ -30,9 +30,9 @@ for repo in repos:
     if not name.startswith("repo-"):
         continue
 
-    pages_ur1 = f"https://{ORG}.github.io/{name}/"
+    pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
 
-    html += f'<li><a href="{pages_ur1}" target="_balank">{name}</a></li>\n'
+    html += f'<li>{pages_ur1}</li>\n'
 
 html += "</ul></body></html>"
 
