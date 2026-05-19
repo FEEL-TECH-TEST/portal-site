@@ -27,12 +27,12 @@ for repo in repos:
     #     continue
 
     #　表示対象を絞る（任意：prefix)
-    if not name.startswith("project-"):
-       continue
+    # if not name.startswith("project-"):
+    #    continue
 
     pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
 
-    html += f'<li><a href="{pages_ur1}{name}"</a></li>\n'
+    html += f'<li><a href="{pages_ur1}" target="_blank">{name}</a></li>\n'
 
 html += "</ul></body></html>"
 
