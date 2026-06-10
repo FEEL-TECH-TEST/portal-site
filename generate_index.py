@@ -82,6 +82,17 @@ for repo in repos:
 
     pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
 
+    #　Releases APIで最新リリースを取得
+    releases_api = f"https://api.github.com/repos/{ORG}/{name}/releases/latest"
+    rel_res = requests.get(releases_api)
+    releases = rel_res.json()
+
+    #　リリースがある場合だけボタンを追加
+    releases_btn = ""
+    if isinstance(releases, list) and len(releases) > 0:
+        release_url = releases[0]["html_url"] # 最新リリースのURL
+        releases_btn = f'<a href="{release_url}" class="btn" target="_blank" rel="noopener">最新リリース</a>'
+
     html += f"""
     <div class="card">
         <h2>📂{name}</h2>
