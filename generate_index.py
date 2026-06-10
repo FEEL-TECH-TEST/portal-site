@@ -1,10 +1,15 @@
 import requests
+import os
 
 ORG = "hanihatena35-prog" # ユーザー名かOrgazination
 
+# GitHub Actionsの場合はトークンを環境変数から取得（未設定でも動作する）
+TOKEN = os.environ.get("GITHUB_TOKEN", "")
+HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
+
 url = f"https://api.github.com/users/{ORG}/repos"  #Github API使用
 
-res = requests.get(url)
+res = requests.get(url, headers=HEADERS)
 repos = res.json()
 
 html = """<!DOCTYPE html>
@@ -84,20 +89,22 @@ for repo in repos:
 
     #　Releases APIで最新リリースを取得
     releases_api = f"https://api.github.com/repos/{ORG}/{name}/releases/latest"
-    rel_res = requests.get(releases_api)
+    rel_res = requests.get(releases_api, headers=HEADERS)
     releases = rel_res.json()
 
     #　リリースがある場合だけボタンを追加
     releases_btn = ""
     if isinstance(releases, list) and len(releases) > 0:
         release_url = releases[0]["html_url"] # 最新リリースのURL
-        releases_btn = f'<a href="{release_url}" class="btn" target="_blank" rel="noopener">最新リリース</a>'
+        release_tag = releases[0].get("tag_name", "latest") # 最新リリースのタグ名
+        releases_btn = f'<a href="{release_url}" class="btn" target="_blank" rel="noopener">最新リリース ({release_tag})</a>'
 
     html += f"""
     <div class="card">
         <h2>📂{name}</h2>
         <p>{description}</p>
         <a href="{pages_ur1}" class="btn" target="_blank" rel="noopener">ダウンロードページへ</a>
+        {releases_btn}
     </div>
     """
 
