@@ -1,16 +1,25 @@
 import requests
 import os
 
-ORG = "hanihatena35-prog" # ユーザー名かOrgazination
+ORG = "hanihatena35-prog" # 個人ユーザー
+ORG_NAME = "FEEL-TECH-TEST" # 組織ユーザー
 
 # GitHub Actionsの場合はトークンを環境変数から取得（未設定でも動作する）
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
 HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
 
+# 個人配下のリポジトリを取得
 url = f"https://api.github.com/users/{ORG}/repos"  #Github API使用
-
 res = requests.get(url, headers=HEADERS)
 repos = res.json()
+
+# Organization配下のリポジトリを取得
+org_url = f"https://api.github.com/orgs/{ORG_NAME}/repos"
+org_res = requests.get(org_url, headers=HEADERS)
+org_repos = org_res.json()
+
+# リポジトリを結合
+repos = repos + org_repos
 
 html = """<!DOCTYPE html>
 <html lang="ja">
@@ -75,6 +84,7 @@ h1{
 for repo in repos:
     name = repo["name"]
     description = repo["description"] or ""
+    owner = repo["owner"]["login"]  # オーナー名をAPIレスポンスから取得
 
     #　公開repoのみ対象
     #　ひとまずPublicも対象にするので下記をコメント化
@@ -85,10 +95,10 @@ for repo in repos:
     if not (name.startswith("project-") or name.startswith("Organization_")):
        continue
 
-    pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
+    pages_ur1 = f"https://{owner}.github.io/{name}/" #Pages URL　ownerに修正
 
     #　Releases APIで最新リリースを取得
-    releases_api = f"https://api.github.com/repos/{ORG}/{name}/releases"
+    releases_api = f"https://api.github.com/repos/{owner}/{name}/releases"  #ownerに修正
     rel_res = requests.get(releases_api, headers=HEADERS)
     releases = rel_res.json()
 
