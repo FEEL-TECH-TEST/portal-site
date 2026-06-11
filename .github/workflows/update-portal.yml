@@ -9,6 +9,8 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Pushの権限を明示
 
     steps:
       - uses: actions/checkout@v4
