@@ -108,11 +108,16 @@ for repo in repos:
     if not (name.startswith("project-") or name.startswith("Organization_")):
        continue
 
-    pages_ur1 = f"https://{owner}.github.io/{name}/" #Pages URL　ownerに修正
+    # pages_url = f"https://{owner}.github.io/{name}/" #Pages URL　ownerに修正
 
     #　Releases APIで最新リリースを取得
     releases_api = f"https://api.github.com/repos/{owner}/{name}/releases"  #ownerに修正
     rel_res = requests.get(releases_api, headers=HEADERS)
+
+    # デバッグ
+    print(f"Releases API [{name}] status: {rel_res.status_code}")
+    print(f"Releases response: {rel_res.json()}")
+    
     releases = rel_res.json()
 
     #　リリースがある場合だけボタンを追加
@@ -121,12 +126,20 @@ for repo in repos:
         release_url = releases[0]["html_url"] # 最新リリースのURL
         release_tag = releases[0].get("tag_name", "latest") # 最新リリースのタグ名
         releases_btn = f'<a href="{release_url}" class="btn" target="_blank" rel="noopener">最新リリース ({release_tag})</a>'
+    
+    #　PagesのAPIで有効/無効を確認
+    pages_api = f"https://api.github.com/repos/{owner}/{name}/pages"
+    pages_res = requests.get(pages_api, headers=HEADERS)
+    pages_btn = ""
+    if pages_res.status_code == 200:
+        pages_url = f"https://{owner}.github.io/{name}/" # APIからURLを取得、なければ従来のURL
+        pages_btn = f'<a href="{pages_url}" class="btn" target="_blank" rel="noopener">ダウンロードページへ</a>'
 
     html += f"""
     <div class="card">
         <h2>📂{name}</h2>
         <p>{description}</p>
-        <a href="{pages_ur1}" class="btn" target="_blank" rel="noopener">ダウンロードページへ</a>
+        {pages_btn}
         {releases_btn}
     </div>
     """
