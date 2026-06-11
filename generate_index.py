@@ -5,7 +5,7 @@ ORG = "hanihatena35-prog" # 個人ユーザー
 ORG_NAME = "FEEL-TECH-TEST" # 組織ユーザー
 
 # GitHub Actionsの場合はトークンを環境変数から取得（未設定でも動作する）
-TOKEN = os.environ.get("GITHUB_TOKEN", "")
+TOKEN = os.environ.get("ORG_TOKEN", "")
 HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
 
 # 個人配下のリポジトリを取得
