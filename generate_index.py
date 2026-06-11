@@ -19,7 +19,7 @@ org_res = requests.get(org_url, headers=HEADERS)
 org_repos = org_res.json()
 
 # デバック
-print(f"Org API status: {org_res.status_code})
+print(f"Org API status: {org_res.status_code}")
 print(f"=== 個人リポジトリ数: {len(repos)} ===")
 for r in repos:
     print(f"  -  {r['name']} (Private: {r['private']})")
