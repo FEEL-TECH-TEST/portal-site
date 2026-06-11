@@ -6,6 +6,9 @@ ORG_NAME = "FEEL-TECH-TEST" # 組織ユーザー
 
 # GitHub Actionsの場合はトークンを環境変数から取得（未設定でも動作する）
 TOKEN = os.environ.get("ORG_TOKEN", "")
+# Debug追加
+print(f"トークン取得: {'あり' if TOKEN else 'なし'}")
+
 HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
 
 # 個人配下のリポジトリを取得
