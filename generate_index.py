@@ -14,9 +14,18 @@ res = requests.get(url, headers=HEADERS)
 repos = res.json()
 
 # Organization配下のリポジトリを取得
-org_url = f"https://api.github.com/orgs/{ORG_NAME}/repos"
+org_url = f"https://api.github.com/orgs/{ORG_NAME}/repos?type=all"  #Github API使用
 org_res = requests.get(org_url, headers=HEADERS)
 org_repos = org_res.json()
+
+# デバック
+print(f"=== 個人リポジトリ数: {len(repos)} ===")
+for r in repos:
+    print(f"  -  {r['name']} (Private: {r['private']})")
+
+print(f"=== Organizationリポジトリ数: {len(org_repos)} ===")
+for r in org_repos:
+    print(f"  -  {r['name']} (Private: {r['private']})")
 
 # リポジトリを結合
 repos = repos + org_repos
