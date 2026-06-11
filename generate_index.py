@@ -107,7 +107,7 @@ for repo in repos:
     #     continue
 
     #　表示対象を絞る（任意：prefix)
-    if not (name.startswith("project-") or name.startswith("Organization_")):
+    if not (name.startswith("project-doc") or name.startswith("Organization_")):
        continue
 
     # pages_url = f"https://{owner}.github.io/{name}/" #Pages URL　ownerに修正
