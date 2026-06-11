@@ -17,7 +17,7 @@ jobs:
 
       - name: Generate index
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 追加
+          GITHUB_TOKEN: ${{ secrets.ORG_TOKEN }}  # 追加
         run: python generate_index.py
 
       - name: Commit and push
