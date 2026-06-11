@@ -82,13 +82,13 @@ for repo in repos:
     #     continue
 
     #　表示対象を絞る（任意：prefix)
-    if not (name.startswith("project-") or name.endswith("Organization_")):
+    if not (name.startswith("project-") or name.startswith("Organization_")):
        continue
 
     pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
 
     #　Releases APIで最新リリースを取得
-    releases_api = f"https://api.github.com/repos/{ORG}/{name}/releases/latest"
+    releases_api = f"https://api.github.com/repos/{ORG}/{name}/releases"
     rel_res = requests.get(releases_api, headers=HEADERS)
     releases = rel_res.json()
 
