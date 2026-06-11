@@ -93,6 +93,8 @@ h1{
 <h1>ダウンロードポータル</h1>
 <div class="container">
 """
+pages_cards = ""    # Pages用のカードHTMLを格納する変数
+releases_cards = ""   # Releases用のカードHTMLを格納する変数
 
 for repo in repos:
     name = repo["name"]
@@ -135,7 +137,7 @@ for repo in repos:
         pages_url = f"https://{owner}.github.io/{name}/" # APIからURLを取得、なければ従来のURL
         pages_btn = f'<a href="{pages_url}" class="btn" target="_blank" rel="noopener">ダウンロードページへ</a>'
 
-    html += f"""
+    card = f"""
     <div class="card">
         <h2>📂{name}</h2>
         <p>{description}</p>
@@ -144,6 +146,15 @@ for repo in repos:
     </div>
     """
 
+    # Releaseがあるカードは下、ないカードは上に振り分け
+    if releases_btn:
+        releases_cards += card
+    else:
+        pages_cards += card
+
+# Pages用を先に、Release用を後にまとめて出力
+html += pages_cards
+html += releases_cards
 html += "</div></body></html>"
 
 with open("index.html", "w", encoding="utf-8") as f:
