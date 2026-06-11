@@ -82,7 +82,7 @@ for repo in repos:
     #     continue
 
     #　表示対象を絞る（任意：prefix)
-    if not name.startswith("project-"):
+    if not (name.startswith("project-") or name.endswith("Organization_")):
        continue
 
     pages_ur1 = f"https://{ORG}.github.io/{name}/" #Pages URL
