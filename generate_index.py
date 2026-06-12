@@ -1,7 +1,8 @@
 import requests
 import os
 
-ORG = "hanihatena35-prog" # 個人ユーザー
+# 個人配下は対象から外すのでコメント化
+# ORG = "hanihatena35-prog" # 個人ユーザー
 ORG_NAME = "FEEL-TECH-TEST" # 組織ユーザー
 
 # GitHub Actionsの場合はトークンを環境変数から取得（未設定でも動作する）
@@ -11,10 +12,11 @@ print(f"トークン取得: {'あり' if TOKEN else 'なし'}")
 
 HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
 
+# 個人配下のリポジトリは対象から外すのでコメント化
 # 個人配下のリポジトリを取得
-url = f"https://api.github.com/users/{ORG}/repos"  #Github API使用
-res = requests.get(url, headers=HEADERS)
-repos = res.json()
+# url = f"https://api.github.com/users/{ORG}/repos"  #Github API使用
+# res = requests.get(url, headers=HEADERS)
+# repos = res.json()
 
 # Organization配下のリポジトリを取得
 org_url = f"https://api.github.com/orgs/{ORG_NAME}/repos?type=all"  #Github API使用
@@ -23,16 +25,18 @@ org_repos = org_res.json()
 
 # デバック
 print(f"Org API status: {org_res.status_code}")
-print(f"=== 個人リポジトリ数: {len(repos)} ===")
-for r in repos:
-    print(f"  -  {r['name']} (Private: {r['private']})")
+# 個人配下のリポジトリは対象から外すのでコメント化
+# print(f"=== 個人リポジトリ数: {len(repos)} ===")
+# for r in repos:
+#    print(f"  -  {r['name']} (Private: {r['private']})")
 
 print(f"=== Organizationリポジトリ数: {len(org_repos)} ===")
 for r in org_repos:
     print(f"  -  {r['name']} (Private: {r['private']})")
 
 # リポジトリを結合
-repos = repos + org_repos
+# repos = repos + org_repos
+repos = org_repos  # 個人配下は対象から外すので組織配下のみ使用
 
 html = """<!DOCTYPE html>
 <html lang="ja">
