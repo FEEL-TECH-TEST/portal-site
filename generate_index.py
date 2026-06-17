@@ -150,18 +150,17 @@ for repo in repos:
         display_btn = releases_btn  # releasesのみ
     else:
         display_btn = ""  # どちらもない場合はボタンなし
-        
+
     card = f"""
     <div class="card">
         <h2>📂{name}</h2>
         <p>{description}</p>
-        {pages_btn}
-        {releases_btn}
+        {display_btn}
     </div>
     """
 
     # Releaseがあるカードは下、ないカードは上に振り分け
-    if releases_btn:
+    if releases_btn and not pages_btn:
         releases_cards += card
     else:
         pages_cards += card
