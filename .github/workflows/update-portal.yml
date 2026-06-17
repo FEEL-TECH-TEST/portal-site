@@ -2,9 +2,6 @@ name: Update Portal Index
 
 on:
   workflow_dispatch:
-  
-  schedule:
-    - cron: "0 0 * * *"  # 1日毎
 
 jobs:
   update:

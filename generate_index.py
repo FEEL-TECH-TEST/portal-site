@@ -8,7 +8,7 @@ ORG_NAME = "FEEL-TECH-TEST" # 組織ユーザー
 # GitHub Actionsの場合はトークンを環境変数から取得（未設定でも動作する）
 TOKEN = os.environ.get("ORG_TOKEN", "")
 # Debug追加
-print(f"トークン取得: {'あり' if TOKEN else 'なし'}")
+# print(f"トークン取得: {'あり' if TOKEN else 'なし'}")
 
 HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
 
@@ -24,15 +24,16 @@ org_res = requests.get(org_url, headers=HEADERS)
 org_repos = org_res.json()
 
 # デバック
-print(f"Org API status: {org_res.status_code}")
+# print(f"Org API status: {org_res.status_code}")
 # 個人配下のリポジトリは対象から外すのでコメント化
 # print(f"=== 個人リポジトリ数: {len(repos)} ===")
 # for r in repos:
 #    print(f"  -  {r['name']} (Private: {r['private']})")
 
-print(f"=== Organizationリポジトリ数: {len(org_repos)} ===")
-for r in org_repos:
-    print(f"  -  {r['name']} (Private: {r['private']})")
+# デバック
+# print(f"=== Organizationリポジトリ数: {len(org_repos)} ===")
+# for r in org_repos:
+#     print(f"  -  {r['name']} (Private: {r['private']})")
 
 # リポジトリを結合
 # repos = repos + org_repos
@@ -121,8 +122,8 @@ for repo in repos:
     rel_res = requests.get(releases_api, headers=HEADERS)
 
     # デバッグ
-    print(f"Releases API [{name}] status: {rel_res.status_code}")
-    print(f"Releases response: {rel_res.json()}")
+    # print(f"Releases API [{name}] status: {rel_res.status_code}")
+    # print(f"Releases response: {rel_res.json()}")
     
     releases = rel_res.json()
 
