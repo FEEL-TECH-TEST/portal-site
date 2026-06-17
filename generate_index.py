@@ -141,6 +141,16 @@ for repo in repos:
         pages_url = f"https://{owner}.github.io/{name}/" # APIからURLを取得、なければ従来のURL
         pages_btn = f'<a href="{pages_url}" class="btn" target="_blank" rel="noopener">ダウンロードページへ</a>'
 
+    #　pagesとreleasesの両方がある場合はpagesのみ表示
+    if pages_btn and releases_btn:
+        display_btn = pages_btn  # pagesのみ
+    elif pages_btn:
+        display_btn = pages_btn  # pagesのみ
+    elif releases_btn:
+        display_btn = releases_btn  # releasesのみ
+    else:
+        display_btn = ""  # どちらもない場合はボタンなし
+        
     card = f"""
     <div class="card">
         <h2>📂{name}</h2>
