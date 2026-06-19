@@ -62,7 +62,7 @@ while True:
 
 # リポジトリを結合
 # repos = repos + org_repos
-repos = org_repos  # 個人配下は対象から外すので組織配下のみ使用
+# repos = org_repos  # 個人配下は対象から外すので組織配下のみ使用
 
 html = """<!DOCTYPE html>
 <html lang="ja">
