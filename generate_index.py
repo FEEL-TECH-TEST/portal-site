@@ -1,14 +1,12 @@
 import requests
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# 個人配下は対象から外すのでコメント化
-# ORG = "hanihatena35-prog" # 個人ユーザー
-ORG_NAME = "FEEL-TECH-TEST" # 組織ユーザー
+ORG_NAME = "FEEL-TECH-TEST"  # 組織ユーザー
 
-# GitHub Actionsの場合はトークンを環境変数から取得（未設定でも動作する）
+# GitHub Actionsの場合はトークンを環境変数から取得
 TOKEN = os.environ.get("ORG_TOKEN", "")
-# Debug追加
-# print(f"トークン取得: {'あり' if TOKEN else 'なし'}")
+print(f"トークン取得: {'あり' if TOKEN else 'なし'}")
 
 HEADERS = {
     "Authorization": f"token {TOKEN}",
@@ -27,7 +25,7 @@ while True:
     url = f"https://api.github.com/orgs/{ORG_NAME}/repos?type=all&per_page=100&page={page}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code != 200:
-        print(f"Error fetching repos: {res.status_code}")
+        print(f"Error fetching repos (page={page}): {res.status_code} {res.text}")
         break
 
     data = res.json()
@@ -35,35 +33,118 @@ while True:
         break  # 取得するリポジトリがなくなったら終了
 
     repos.extend(data)
+    print(f"  page {page}: {len(data)} 件取得（累計 {len(repos)} 件）")
     page += 1
 
-# 個人配下のリポジトリは対象から外すのでコメント化
-# 個人配下のリポジトリを取得
-# url = f"https://api.github.com/users/{ORG}/repos"  #Github API使用
-# res = requests.get(url, headers=HEADERS)
-# repos = res.json()
+print(f"=== Organizationリポジトリ総数: {len(repos)} ===")
 
-# Organization配下のリポジトリを取得
-# org_url = f"https://api.github.com/orgs/{ORG_NAME}/repos?type=all"  #Github API使用
-# org_res = requests.get(org_url, headers=HEADERS)
-# org_repos = org_res.json()
+# --------------------------------
+# prefixフィルタ（APIを叩く前に絞り込む）
+# --------------------------------
+filtered_repos = [
+    r for r in repos
+    if r["name"].startswith("project-doc") or r["name"].startswith("Organization_")
+]
+print(f"=== prefixフィルタ後: {len(filtered_repos)} 件 ===")
 
-# デバック
-# print(f"Org API status: {org_res.status_code}")
-# 個人配下のリポジトリは対象から外すのでコメント化
-# print(f"=== 個人リポジトリ数: {len(repos)} ===")
-# for r in repos:
-#    print(f"  -  {r['name']} (Private: {r['private']})")
+# --------------------------------
+# 各リポジトリの詳細情報を並列取得
+# --------------------------------
+def fetch_repo_detail(repo):
+    """
+    topics / releases / pages を並列取得してカード情報を返す。
+    フィルタ条件を満たさない場合は None を返す。
+    """
+    name  = repo["name"]
+    owner = repo["owner"]["login"]
 
-# デバック
-# print(f"=== Organizationリポジトリ数: {len(org_repos)} ===")
-# for r in org_repos:
-#     print(f"  -  {r['name']} (Private: {r['private']})")
+    # topics を個別APIで確実に取得
+    #    /orgs/.../repos の一覧APIはtopicsを返さない場合があるため個別取得が確実
+    topics_res = requests.get(
+        f"https://api.github.com/repos/{owner}/{name}/topics",
+        headers=HEADERS
+    )
+    if topics_res.status_code == 200:
+        topics = topics_res.json().get("names", [])
+    else:
+        topics = []
 
-# リポジトリを結合
-# repos = repos + org_repos
-# repos = org_repos  # 個人配下は対象から外すので組織配下のみ使用
+    # topicフィルタ（"project-doc" トピックがなければスキップ）
+    if "project-doc" not in topics:
+        return None
 
+    description = repo.get("description") or ""
+
+    # Releases APIで最新リリースを取得
+    rel_res = requests.get(
+        f"https://api.github.com/repos/{owner}/{name}/releases",
+        headers=HEADERS
+    )
+    releases_btn = ""
+    if rel_res.status_code == 200:
+        releases = rel_res.json()
+        if isinstance(releases, list) and len(releases) > 0:
+            release_url = releases[0]["html_url"]
+            release_tag = releases[0].get("tag_name", "latest")
+            releases_btn = (
+                f'<a href="{release_url}" class="btn" target="_blank" rel="noopener">'
+                f'最新リリース ({release_tag})</a>'
+            )
+
+    # PagesのAPIで有効/無効を確認
+    pages_res = requests.get(
+        f"https://api.github.com/repos/{owner}/{name}/pages",
+        headers=HEADERS
+    )
+    pages_btn = ""
+    if pages_res.status_code == 200:
+        pages_url = f"https://{owner}.github.io/{name}/"
+        pages_btn = (
+            f'<a href="{pages_url}" class="btn" target="_blank" rel="noopener">'
+            f'ダウンロードページへ</a>'
+        )
+
+    # pagesがあればpages優先、なければreleases
+    if pages_btn:
+        display_btn = pages_btn
+    elif releases_btn:
+        display_btn = releases_btn
+    else:
+        display_btn = ""
+
+    card = f"""
+    <div class="card">
+        <h2>📂{name}</h2>
+        <p>{description}</p>
+        {display_btn}
+    </div>
+    """
+
+    # Releaseのみ（pagesなし）→ releases_cards、それ以外 → pages_cards
+    bucket = "releases" if (releases_btn and not pages_btn) else "pages"
+
+    return {"bucket": bucket, "card": card}
+
+
+# 並列実行（最大10スレッド：GitHub APIのレート制限を考慮）
+pages_cards   = ""
+releases_cards = ""
+
+print(f"=== 詳細情報を並列取得中（対象: {len(filtered_repos)} 件）===")
+with ThreadPoolExecutor(max_workers=10) as executor:
+    futures = {executor.submit(fetch_repo_detail, repo): repo for repo in filtered_repos}
+    for future in as_completed(futures):
+        result = future.result()
+        if result is None:
+            continue
+        if result["bucket"] == "releases":
+            releases_cards += result["card"]
+        else:
+            pages_cards += result["card"]
+
+# --------------------------------
+# HTML生成
+# --------------------------------
 html = """<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -78,7 +159,7 @@ body {
     padding: 20px;
 }
 
-h1{
+h1 {
     text-align: center;
 }
 
@@ -123,83 +204,16 @@ h1{
 <h1>ダウンロードポータル</h1>
 <div class="container">
 """
-pages_cards = ""    # Pages用のカードHTMLを格納する変数
-releases_cards = ""   # Releases用のカードHTMLを格納する変数
-
-# --------------------------------
-# フィルタ＆線画
-# --------------------------------
-for repo in repos:
-    name = repo["name"]
-    description = repo["description"] or ""
-    owner = repo["owner"]["login"]  # オーナー名をAPIレスポンスから取得
-
-    #　公開repoのみ対象
-    #　ひとまずPublicも対象にするので下記をコメント化
-    # if repo["private"]:
-    #     continue
-
-    #　表示対象を絞る（任意：prefix)
-    if not (name.startswith("project-doc") or name.startswith("Organization_")):
-       continue
-
-    # topicフィルタ
-    topics = repo.get("topics", [])
-    if "project-doc" not in topics:
-        continue
-
-    #　Releases APIで最新リリースを取得
-    releases_api = f"https://api.github.com/repos/{owner}/{name}/releases"  #ownerに修正
-    rel_res = requests.get(releases_api, headers=HEADERS)
-
-    # デバッグ
-    # print(f"Releases API [{name}] status: {rel_res.status_code}")
-    # print(f"Releases response: {rel_res.json()}")
-    
-    releases = rel_res.json()
-
-    #　リリースがある場合だけボタンを追加
-    releases_btn = ""
-    if isinstance(releases, list) and len(releases) > 0:
-        release_url = releases[0]["html_url"] # 最新リリースのURL
-        release_tag = releases[0].get("tag_name", "latest") # 最新リリースのタグ名
-        releases_btn = f'<a href="{release_url}" class="btn" target="_blank" rel="noopener">最新リリース ({release_tag})</a>'
-    
-    #　PagesのAPIで有効/無効を確認
-    pages_api = f"https://api.github.com/repos/{owner}/{name}/pages"
-    pages_res = requests.get(pages_api, headers=HEADERS)
-    pages_btn = ""
-    if pages_res.status_code == 200:
-        pages_url = f"https://{owner}.github.io/{name}/" # APIからURLを取得、なければ従来のURL
-        pages_btn = f'<a href="{pages_url}" class="btn" target="_blank" rel="noopener">ダウンロードページへ</a>'
-
-    #　pagesとreleasesの両方がある場合はpagesのみ表示
-    if pages_btn and releases_btn:
-        display_btn = pages_btn  # pagesのみ
-    elif pages_btn:
-        display_btn = pages_btn  # pagesのみ
-    elif releases_btn:
-        display_btn = releases_btn  # releasesのみ
-    else:
-        display_btn = ""  # どちらもない場合はボタンなし
-
-    card = f"""
-    <div class="card">
-        <h2>📂{name}</h2>
-        <p>{description}</p>
-        {display_btn}
-    </div>
-    """
-
-    # Releaseがあるカードは下、ないカードは上に振り分け
-    if releases_btn and not pages_btn:
-        releases_cards += card
-    else:
-        pages_cards += card
 
 # Pages用を先に、Release用を後にまとめて出力
 html += pages_cards
 html += releases_cards
+html += "</div></body></html>"
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html)
+
+print("=== index.html を生成しました ===")
 html += "</div></body></html>"
 
 with open("index.html", "w", encoding="utf-8") as f:
