@@ -10,7 +10,32 @@ TOKEN = os.environ.get("ORG_TOKEN", "")
 # Debug追加
 # print(f"トークン取得: {'あり' if TOKEN else 'なし'}")
 
-HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
+HEADERS = {
+    "Authorization": f"token {TOKEN}",
+    "Accept": "application/vnd.github.mercy-preview+json"  # topics取得に必要
+} if TOKEN else {
+    "Accept": "application/vnd.github.mercy-preview+json"
+}
+
+# --------------------------------
+# Organization repo取得（ページング対応）
+# --------------------------------
+repos = []
+page = 1
+
+while True:
+    url = f"https://api.github.com/orgs/{ORG_NAME}/repos?type=all&per_page=100&page={page}"
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code != 200:
+        print(f"Error fetching repos: {res.status_code}")
+        break
+
+    data = res.json()
+    if not data:
+        break  # 取得するリポジトリがなくなったら終了
+
+    repos.extend(data)
+    page += 1
 
 # 個人配下のリポジトリは対象から外すのでコメント化
 # 個人配下のリポジトリを取得
@@ -19,9 +44,9 @@ HEADERS = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
 # repos = res.json()
 
 # Organization配下のリポジトリを取得
-org_url = f"https://api.github.com/orgs/{ORG_NAME}/repos?type=all"  #Github API使用
-org_res = requests.get(org_url, headers=HEADERS)
-org_repos = org_res.json()
+# org_url = f"https://api.github.com/orgs/{ORG_NAME}/repos?type=all"  #Github API使用
+# org_res = requests.get(org_url, headers=HEADERS)
+# org_repos = org_res.json()
 
 # デバック
 # print(f"Org API status: {org_res.status_code}")
@@ -101,6 +126,9 @@ h1{
 pages_cards = ""    # Pages用のカードHTMLを格納する変数
 releases_cards = ""   # Releases用のカードHTMLを格納する変数
 
+# --------------------------------
+# フィルタ＆線画
+# --------------------------------
 for repo in repos:
     name = repo["name"]
     description = repo["description"] or ""
@@ -115,7 +143,10 @@ for repo in repos:
     if not (name.startswith("project-doc") or name.startswith("Organization_")):
        continue
 
-    # pages_url = f"https://{owner}.github.io/{name}/" #Pages URL　ownerに修正
+    # topicフィルタ
+    topics = repo.get("topics", [])
+    if "project-doc" not in topics:
+        continue
 
     #　Releases APIで最新リリースを取得
     releases_api = f"https://api.github.com/repos/{owner}/{name}/releases"  #ownerに修正
